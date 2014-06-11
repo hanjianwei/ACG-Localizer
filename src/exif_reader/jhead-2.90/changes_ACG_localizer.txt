@@ -1,0 +1,13 @@
+/////////////////////////////////////////////////////////
+//
+// Changes done for integrating jhead into ACG Localizer
+// 
+/////////////////////////////////////////////////////////
+
+* Renamed *.h to *.hh and *.c to *.cc
+* Some minor fixes to make it compile with g++
+* Removed main program from jhead.c
+* Removed original Makefiles
+* in myglob.c : change #include <io.h> to #include <sys/io.h>
+* Renamed myglob.c to myglob.c_ since it is not needed for ACG Localizer
+  and seems to cause some problems when compiling it.
