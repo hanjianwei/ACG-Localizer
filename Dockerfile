@@ -10,7 +10,7 @@ RUN wget http://www.cs.umd.edu/~mount/ANN/Files/1.1.2/ann_1.1.2.tar.gz
 
 RUN tar -zxf ann_1.1.2.tar.gz
 
-RUN sed -i '158s/double/float/' /ann_1.1.2/include/ANN/ANN.h
+RUN sed -i '158s/double/float/' ann_1.1.2/include/ANN/ANN.h
 
 RUN cd ann_1.1.2/src && make linux-g++ && mv ../include/* /usr/include && mv ../lib/* /usr/lib
 
