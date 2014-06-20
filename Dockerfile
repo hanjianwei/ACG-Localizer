@@ -1,4 +1,5 @@
 FROM hanjianwei/python:2.7
+MAINTAINER Jianwei Han <hanjianwei@gmail.com>
 
 RUN apt-get update
 
@@ -23,5 +24,7 @@ COPY flann_modification/kmeans_index.h flann-1.6.11-src/src/cpp/flann/algorithms
 RUN cd flann-1.6.11-src && cmake -D BUILD_MATLAB_BINDINGS=OFF -D BUILD_PYTHON_BINDINGS=OFF . && make && make install
 
 RUN rm -rf ann* flann*
+
+WORKDIR /workspace/projects/localization/ACG-Localizer
 
 CMD ["bash"]
