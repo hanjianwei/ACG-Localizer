@@ -18,9 +18,9 @@ RUN wget http://people.cs.ubc.ca/~mariusm/uploads/FLANN/flann-1.6.11-src.zip
 
 RUN unzip flann-1.6.11-src.zip
 
-RUN cd flann-1.6.11-src && cmake -D BUILD_MATLAB_BINDINGS=OFF -D BUILD_PYTHON_BINDINGS=OFF . && make && make install
+COPY flann_modification/kmeans_index.h flann-1.6.11-src/src/cpp/flann/algorithms/kmeans_index.h
 
-COPY flann_modification/kmeans_index.h /usr/local/include/flann/algorithms/kmeans_index.h
+RUN cd flann-1.6.11-src && cmake -D BUILD_MATLAB_BINDINGS=OFF -D BUILD_PYTHON_BINDINGS=OFF . && make && make install
 
 RUN rm -rf ann* flann*
 
