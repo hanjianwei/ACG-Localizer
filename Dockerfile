@@ -28,4 +28,6 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 WORKDIR /src/ACG-localizer
 
+ENV PATH /src/ACG-localizer/build/bin:$PATH
+
 CMD ["bash"]
