@@ -4,7 +4,7 @@
  *      Copyright (C) 2011-2012 by Computer Graphics Group, RWTH Aachen      *
  *                           www.rwth-graphics.de                            *
  *                                                                           *
- *---------------------------------------------------------------------------* 
+ *---------------------------------------------------------------------------*
  *  This file is part of ACG Localizer                                       *
  *                                                                           *
  *  ACG Localizer is free software: you can redistribute it and/or modify    *
@@ -20,7 +20,7 @@
  *  You should have received a copy of the GNU General Public License        *
  *  along with ACG Localizer.  If not, see <http://www.gnu.org/licenses/>.   *
  *                                                                           *
-\*===========================================================================*/ 
+\*===========================================================================*/
 
 
 #define __STDC_LIMIT_MACROS
@@ -56,7 +56,7 @@
 // RANSAC
 #include "RANSAC.hh"
 
-// exif reader to get the width and height out 
+// exif reader to get the width and height out
 // of the exif tags of an image
 #include "exif_reader/exif_reader.hh"
 
@@ -69,14 +69,14 @@ const uint64_t sift_dim = 128;
 // Classes to handle the two nearest neighbors (nn) of a descriptor.
 // There are three classes:
 // 1. Normal 2 nearest neighbors for integer distances
-// 2. 2 nearest neighbors for integer distances, making sure 
+// 2. 2 nearest neighbors for integer distances, making sure
 //    that the second nearest neighbor does not belong to the same 3D point
 // 3. Normal 2 nearest neighbors for floating point distances
 //
-// We store the distances to the 2 nearest neighbors as well as the ids of the 
+// We store the distances to the 2 nearest neighbors as well as the ids of the
 // corresponding 3D points and update the 2 nearest neighbors if needed.
 // The stored distances are squared Euclidean distances.
-////  
+////
 
 // for unsigned char descriptors
 class nearest_neighbors
@@ -89,13 +89,13 @@ class nearest_neighbors
       nn_idx1 = nn_idx2 = UINT32_MAX;
       dist1 = dist2 = -1;
     }
-    
+
     nearest_neighbors( uint32_t nn1, uint32_t nn2, int d1, int d2 ) : nn_idx1( nn1 ), nn_idx2( nn2 ), dist1( d1 ), dist2( d2 )
     {}
-      
+
     nearest_neighbors( uint32_t nn1, int d1 ) : nn_idx1( nn1 ), nn_idx2( UINT32_MAX ), dist1( d1 ), dist2( -1 )
     {}
-    
+
     nearest_neighbors( const nearest_neighbors &other )
     {
       if( &other != this )
@@ -106,8 +106,8 @@ class nearest_neighbors
         dist2 = other.dist2;
       }
     }
-    
-    // update the 2 nn with a new distance to a 3D points 
+
+    // update the 2 nn with a new distance to a 3D points
     void update( uint32_t point, int dist )
     {
       if( dist1 < 0 )
@@ -131,12 +131,12 @@ class nearest_neighbors
         }
       }
     }
-    
+
     float get_ratio()
     {
       return float(dist1) / float(dist2);
     }
-    
+
     uint32_t nn_idx1, nn_idx2;
     int dist1, dist2;
 };
@@ -150,13 +150,13 @@ class nearest_neighbors_multiple
       nn_idx1 = nn_idx2 = UINT32_MAX;
       dist1 = dist2 = -1;
     }
-    
+
     nearest_neighbors_multiple( uint32_t nn1, uint32_t nn2, int d1, int d2 ) : nn_idx1( nn1 ), nn_idx2( nn2 ), dist1( d1 ), dist2( d2 )
     {}
-      
+
     nearest_neighbors_multiple( uint32_t nn1, int d1 ) : nn_idx1( nn1 ), nn_idx2( UINT32_MAX ), dist1( d1 ), dist2( -1 )
     {}
-    
+
     nearest_neighbors_multiple( const nearest_neighbors_multiple &other )
     {
       if( &other != this )
@@ -167,7 +167,7 @@ class nearest_neighbors_multiple
         dist2 = other.dist2;
       }
     }
-    
+
     void update( uint32_t point, int dist )
     {
       if( dist1 < 0 )
@@ -194,12 +194,12 @@ class nearest_neighbors_multiple
         }
       }
     }
-    
+
     float get_ratio()
     {
       return float(dist1) / float(dist2);
     }
-    
+
     uint32_t nn_idx1, nn_idx2;
     int dist1, dist2;
 };
@@ -213,13 +213,13 @@ class nearest_neighbors_float
       nn_idx1 = nn_idx2 = UINT32_MAX;
       dist1 = dist2 = -1.0;
     }
-    
+
     nearest_neighbors_float( uint32_t nn1, uint32_t nn2, float d1, float d2 ) : nn_idx1( nn1 ), nn_idx2( nn2 ), dist1( d1 ), dist2( d2 )
     {}
-      
+
     nearest_neighbors_float( uint32_t nn1, float d1 ) : nn_idx1( nn1 ), nn_idx2( UINT32_MAX ), dist1( d1 ), dist2( -1 )
     {}
-    
+
     nearest_neighbors_float( const nearest_neighbors_float &other )
     {
       if( &other != this )
@@ -230,7 +230,7 @@ class nearest_neighbors_float
         dist2 = other.dist2;
       }
     }
-    
+
     void update( uint32_t point, float dist )
     {
       if( dist1 < 0 )
@@ -254,19 +254,19 @@ class nearest_neighbors_float
         }
       }
     }
-    
+
     float get_ratio()
     {
       return dist1 / dist2;
     }
-    
+
     uint32_t nn_idx1, nn_idx2;
     float dist1, dist2;
 };
 
 ////
 // functions to compute the squared distances between two SIFT-vectors
-// there are different ways how the SIFT-vectors are stored, for each there is 
+// there are different ways how the SIFT-vectors are stored, for each there is
 // one function
 ////
 
@@ -316,13 +316,13 @@ inline bool cmp_priorities( const std::pair< uint32_t, uint32_t >& a, const std:
 uint32_t minimal_RANSAC_solution = 12;
 
 // SIFT-ratio value. Since we store squared distances, we need the squared value 0.7^2 = 0.49
-float nn_ratio = 0.49f; 
+float nn_ratio = 0.49f;
 
 // the assumed minimal inlier ratio of RANSAC
 float min_inlier = 0.2f;
 
 // stop RANSAC if 60 seconds have passed
-double ransac_max_time = 60.0; 
+double ransac_max_time = 60.0;
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -380,7 +380,7 @@ int main (int argc, char **argv)
     std::cout << "____________________________________________________________________________________________________________________________" << std::endl;
     return -1;
   }
-  
+
   ////
   // get the parameters
   std::string keylist( argv[1] );
@@ -394,33 +394,33 @@ int main (int argc, char **argv)
     std::cerr << " ERROR: unknown mode " << mode << std::endl;
     return -1;
   }
-  
-  
+
+
   min_inlier = atof( argv[7] );
-  
+
   std::cout << " Assumed minimal inlier-ratio: " << min_inlier << std::endl;
-  
+
   size_t max_cor_early_term = (size_t) atoi( argv[8] );
-  
+
   if( max_cor_early_term > 0 )
     std::cout << " Early termination after finding " << max_cor_early_term << " correspondences " << std::endl;
   else
     std::cout << " No early termination in correspondence search" << std::endl;
-  
+
   std::string results( argv[9] );
-  
+
   ////
   // create and open the output file
   std::ofstream ofs_details( results.c_str(), std::ios::out );
-    
+
   if( !ofs_details.is_open() )
   {
     std::cerr << " Could not write results to " << results << std::endl;
     return 1;
   }
-  
+
   ////
-  // load the visual words and their tree 
+  // load the visual words and their tree
   visual_words_handler vw_handler;
   vw_handler.set_nb_trees( nb_trees );
   vw_handler.set_nb_visual_words( nb_clusters );
@@ -432,47 +432,47 @@ int main (int argc, char **argv)
   {
     std::cout << " ERROR: Could not load the cluster centers from " << cluster_file << std::endl;;
     return -1;
-  } 
+  }
   std::cout << "  done " << std::endl;
-    
-  
+
+
   ////
   // load the assignments for the visual words
-  
+
   std::cout << "* Loading and parsing the assignments ... " << std::endl;
-  
+
   // store the 3D positions of the 3D points
   std::vector< OpenMesh::Vec3f > points3D;
-  
+
   // store the descriptors in a vector simply by concatenating their entries
   // depending on the mode, either unsigned char entries or floating point entries are used
   std::vector< unsigned char > all_descriptors;
   std::vector< float > all_descriptors_float;
-  
+
   // for every visual word, store a vector of (3D point id, descriptor id) pairs, where the 3D point id
-  // is the index of the 3D point in points3D and the descriptor id is the position of the first entry of the corresponding 
+  // is the index of the 3D point in points3D and the descriptor id is the position of the first entry of the corresponding
   // descriptor in all_descriptors / all_descriptors_float
   std::vector< std::vector< std::pair< uint32_t, uint32_t > > > vw_points_descriptors(nb_clusters);
-  
+
   // store per visual word the number of (point, descriptor) pairs store in it
   std::vector< uint32_t > nb_points_per_vw(nb_clusters,0);
-  
+
   // number of non-empty visual words, the number of 3D points and the total number of descriptors
   uint32_t nb_non_empty_vw, nb_3D_points, nb_descriptors;
-  
+
   for( uint32_t i=0; i<nb_clusters; ++i )
     vw_points_descriptors[i].clear();
-  
+
   // load the assignments from a file generated by compute_desc_assignments
   {
     std::ifstream ifs( vw_assignments.c_str(), std::ios::in | std::ios::binary  );
-    
+
     if ( !ifs )
     {
       std::cerr << " ERROR: Cannot read the visual word assignments " << vw_assignments << std::endl;
       return -1;
     }
-    
+
     uint32_t nb_clusts;
     ifs.read(( char* ) &nb_3D_points, sizeof( uint32_t ) );
     ifs.read(( char* ) &nb_clusts, sizeof( uint32_t ) );
@@ -481,17 +481,17 @@ int main (int argc, char **argv)
 
     if( nb_clusts != nb_clusters )
       std::cerr << " WARNING: Number of clusters differs! " << nb_clusts << " " << nb_clusters << std::endl;
-    
+
     std::cout << "  Number of non-empty clusters: " << nb_non_empty_vw << " number of points : " << nb_3D_points << " number of descriptors: " << nb_descriptors << std::endl;
-    
+
     // read the 3D points and their visibility polygons
     points3D.resize(nb_3D_points);
     if( mode == 0 || mode == 2 )
       all_descriptors.resize(128*nb_descriptors);
     else
       all_descriptors_float.resize(128*nb_descriptors);
-    
-    
+
+
     // load the points
     float *point_data = new float[3];
     for( uint32_t i=0; i<nb_3D_points; ++i )
@@ -501,7 +501,7 @@ int main (int argc, char **argv)
         points3D[i][j] = point_data[j];
     }
     delete [] point_data;
-       
+
     // load the descriptors
     int tmp_int;
     uint64_t index = 0;
@@ -515,7 +515,7 @@ int main (int argc, char **argv)
           ifs.read(( char* ) &all_descriptors_float[index+j], sizeof( float ) );
       }
     }
-    
+
     // now we load the assignments of the pairs (point_id, descriptor_id) to the visual words
     for( uint32_t i=0; i<nb_non_empty_vw; ++i )
     {
@@ -531,12 +531,12 @@ int main (int argc, char **argv)
       }
     }
     ifs.close();
-    
+
     std::cout << "  done loading and parsing the assignments " << std::endl;
   }
-  
 
-  
+
+
   ////
   // now load all the filenames of the query images
   std::vector< std::string > key_filenames;
@@ -544,7 +544,7 @@ int main (int argc, char **argv)
   {
     std::ifstream ifs( keylist.c_str(), std::ios::in );
     std::string tmp_string;
-    
+
     while( !ifs.eof() )
     {
       tmp_string = "";
@@ -555,12 +555,12 @@ int main (int argc, char **argv)
     ifs.close();
     std::cout << " done loading " << key_filenames.size() << " keyfile names " << std::endl;
   }
-  
+
   uint32_t nb_keyfiles = key_filenames.size();
-  
+
   ////
   // do the actual localization
-  
+
   // first initialize some variables used to compute statistics about the number of registered images
   double avrg_reg_time = 0.0;
   double avrg_reject_time = 0.0;
@@ -581,29 +581,29 @@ int main (int argc, char **argv)
   double RANSAC_time = 0.0;
   double avrg_RANSAC_time_registered = 0.0;
   double avrg_RANSAC_time_rejected = 0.0;
-  
+
   // the number of registered images
   uint32_t registered = 0;
-  
+
   // store all assignments of 2D features to visual words in one large vector (resized if necessary)
   // preallocated for speed
   std::vector< uint32_t > computed_visual_words( 50000, 0 );
-  
-  
+
+
   for( uint32_t i=0; i<nb_keyfiles; ++i, N+=1.0 )
   {
     std::cout << std::endl << " --------- " << i+1 << " / " << nb_keyfiles << " --------- " << std::endl;
-    
+
     // load the features
     SIFT_loader key_loader;
     key_loader.load_features( key_filenames[i].c_str(), LOWE );
-    
+
     std::vector< unsigned char* >& descriptors = key_loader.get_descriptors();
     std::vector< SIFT_keypoint >& keypoints = key_loader.get_keypoints();
-    
+
     uint32_t nb_loaded_keypoints = (uint32_t) keypoints.size();
-    
-   
+
+
     // center the keypoints around the center of the image
     // first we need to get the dimensions of the image which we obtain from its exif tag
     int img_width, img_height;
@@ -613,42 +613,42 @@ int main (int argc, char **argv)
     img_width = exif_reader::get_image_width();
     img_height = exif_reader::get_image_height();
     exif_reader::close_exif();
-    
+
     for( uint32_t j=0; j<nb_loaded_keypoints; ++j )
     {
-      keypoints[j].x -= (img_width-1.0)/2.0f; 
-      keypoints[j].y = (img_height-1.0)/2.0f - keypoints[j].y; 
+      keypoints[j].x -= (img_width-1.0)/2.0f;
+      keypoints[j].y = (img_height-1.0)/2.0f - keypoints[j].y;
     }
-    
+
     std::cout << " loaded " << nb_loaded_keypoints << " descriptors from " << key_filenames[i] << std::endl;
-    
+
     ////
-    // assign the descriptors to the visual words   
+    // assign the descriptors to the visual words
     Timer timer;
     timer.Init();
     timer.Start();
-    
+
     if( computed_visual_words.size() < nb_loaded_keypoints )
       computed_visual_words.resize( nb_loaded_keypoints );
 
-    
+
     std::set< size_t > unique_vw;
     unique_vw.clear();
 
     vw_handler.set_nb_paths( 10 );
     vw_handler.assign_visual_words_ucharv( descriptors, nb_loaded_keypoints, computed_visual_words );
-    
+
     timer.Stop();
-    
+
     for( size_t j=0; j<nb_loaded_keypoints; ++j )
       unique_vw.insert( computed_visual_words[j] );
-    
+
     std::cout << " assigned visual words in " << timer.GetElapsedTimeAsString() << " to " << unique_vw.size() << " unique vw" << std::endl;
-    
+
     avrg_vw_time = avrg_vw_time * N / (N+1.0) + timer.GetElapsedTime() / (N+1.0);
     avrg_nb_features = avrg_nb_features * N / (N+1.0) + double(nb_loaded_keypoints) / (N+1.0);
     vw_time = timer.GetElapsedTime();
-    
+
     ////
     // establish 2D-3D correspondences by using the vw to compute pairwise nearest neighbors
     timer.Init();
@@ -657,9 +657,9 @@ int main (int argc, char **argv)
     Timer all_timer;
     all_timer.Init();
     all_timer.Start();
-    
+
     uint32_t max_corr = 0;
-    
+
     // sort the 2D points in ascending order of the number of 3D points belonging to their respective visual words
     std::vector< std::pair< uint32_t, uint32_t > > priorities( nb_loaded_keypoints );
     for( size_t j=0; j<nb_loaded_keypoints; ++j )
@@ -667,7 +667,7 @@ int main (int argc, char **argv)
       priorities[j].first = j;
       priorities[j].second = nb_points_per_vw[computed_visual_words[j]];
     }
-    
+
     std::sort( priorities.begin(), priorities.end(), cmp_priorities );
 
 
@@ -677,7 +677,7 @@ int main (int argc, char **argv)
     // i.e. the smallest Euclidean distance in descriptor space
     std::map< uint32_t, std::pair< uint32_t, int > > corr_3D_to_2D;
     corr_3D_to_2D.clear();
-    
+
     std::map< uint32_t, nearest_neighbors >::iterator map_it_2D;
     std::map< uint32_t, nearest_neighbors_float >::iterator map_it_2D_float;
     std::map< uint32_t, nearest_neighbors_multiple >::iterator map_it_2D_multple;
@@ -694,27 +694,27 @@ int main (int argc, char **argv)
       {
         uint32_t j_index = priorities[j].first;
         uint32_t assignment = uint32_t( computed_visual_words[j_index] );
-        
+
         nearest_neighbors nn;
-        
+
         if( vw_points_descriptors[assignment].size() > 0 )
         {
           // find nearest neighbor for 2D feature, update nearest neighbor information for 3D points if necessary
           size_t nb_poss_assignments = vw_points_descriptors[assignment].size();
-          
+
           nb_comparisons += nb_poss_assignments;
-          
+
           for( size_t k=0; k<nb_poss_assignments; ++k )
           {
             uint32_t point_id = vw_points_descriptors[assignment][k].first;
             uint32_t desc_id = vw_points_descriptors[assignment][k].second;
-            
+
             int dist = compute_squared_SIFT_dist( descriptors[j_index], all_descriptors, desc_id );
-            
+
             nn.update( point_id, dist );
           }
         }
-        
+
         // check if we have found a correspondence
         if( nn.dist1 >= 0 )
         {
@@ -724,7 +724,7 @@ int main (int argc, char **argv)
             {
               // we found one, so we need check for mutual nearest neighbors
               map_it_3D = corr_3D_to_2D.find( nn.nn_idx1 );
-        
+
               if( map_it_3D != corr_3D_to_2D.end() )
               {
                 if( map_it_3D->second.second > nn.dist1 )
@@ -740,7 +740,7 @@ int main (int argc, char **argv)
             }
           }
         }
-        
+
         // stop the search if enough correspondences are found
         if( max_cor_early_term > 0 && corr_3D_to_2D.size() >= max_cor_early_term )
         {
@@ -756,26 +756,26 @@ int main (int argc, char **argv)
       {
         uint32_t j_index = priorities[j].first;
         uint32_t assignment = uint32_t( computed_visual_words[j_index] );
-        
+
         nearest_neighbors_float nn;
-        
+
         if( vw_points_descriptors[assignment].size() > 0 )
         {
           // find nearest neighbor for 2D feature, update nearest neighbor information for 3D points if necessary
           size_t nb_poss_assignments = vw_points_descriptors[assignment].size();
           nb_comparisons += nb_poss_assignments;
-          
+
           for( size_t k=0; k<nb_poss_assignments; ++k )
           {
             uint32_t point_id = vw_points_descriptors[assignment][k].first;
             uint32_t desc_id = vw_points_descriptors[assignment][k].second;
-            
+
             float dist = compute_squared_SIFT_dist_float( descriptors[j_index], all_descriptors_float, desc_id );
-            
+
             nn.update( point_id, dist );
           }
         }
-        
+
         // check if we have found a correspondence
         if( nn.dist1 >= 0.0 )
         {
@@ -785,7 +785,7 @@ int main (int argc, char **argv)
             {
               // we found one, so we need check for mutual nearest neighbors
               map_it_3D = corr_3D_to_2D.find( nn.nn_idx1 );
-        
+
               if( map_it_3D != corr_3D_to_2D.end() )
               {
                 if( map_it_3D->second.second > nn.dist1 )
@@ -801,7 +801,7 @@ int main (int argc, char **argv)
             }
           }
         }
-        
+
         if( max_cor_early_term > 0 && corr_3D_to_2D.size() >= max_cor_early_term )
         {
           nb_considered_points = j+1;
@@ -815,27 +815,27 @@ int main (int argc, char **argv)
       {
         uint32_t j_index = priorities[j].first;
         uint32_t assignment = uint32_t( computed_visual_words[j_index] );
-        
+
         nearest_neighbors_multiple nn;
-        
+
         if( vw_points_descriptors[assignment].size() > 0 )
         {
           // find nearest neighbor for 2D feature, update nearest neighbor information for 3D points if necessary
           size_t nb_poss_assignments = vw_points_descriptors[assignment].size();
           nb_comparisons += nb_poss_assignments;
-          
+
           for( size_t k=0; k<nb_poss_assignments; ++k )
           {
             uint32_t point_id = vw_points_descriptors[assignment][k].first;
             uint32_t desc_id = vw_points_descriptors[assignment][k].second;
-            
-            
+
+
             int dist = compute_squared_SIFT_dist( descriptors[j_index], all_descriptors, desc_id );
-            
+
             nn.update( point_id, dist );
           }
         }
-        
+
         // check if we have found a correspondence
         if( nn.dist1 >= 0 )
         {
@@ -845,7 +845,7 @@ int main (int argc, char **argv)
             {
               // we found one, so we need check for mutual nearest neighbors
               map_it_3D = corr_3D_to_2D.find( nn.nn_idx1 );
-        
+
               if( map_it_3D != corr_3D_to_2D.end() )
               {
                 if( map_it_3D->second.second > nn.dist1 )
@@ -861,7 +861,7 @@ int main (int argc, char **argv)
             }
           }
         }
-        
+
         if( max_cor_early_term > 0 && corr_3D_to_2D.size() >= max_cor_early_term )
         {
           nb_considered_points = j+1;
@@ -869,63 +869,63 @@ int main (int argc, char **argv)
         }
       }
     }
-    
+
     if( nb_considered_points == 0 )
       nb_considered_points = nb_loaded_keypoints;
-    
-    
+
+
 
     ////
     // compute and store the correspondences such that we can easily hand them over to RANSAC
-    
+
     // the 2D and 3D positions of features and points are simply concatenated into 2 vectors
     std::vector< float > c2D, c3D;
     c2D.clear();
     c3D.clear();
-    
+
     // furthermore, we want to store the ids of the 2D features and the 3D points3D
     // first the 2D, then the 3D point
     std::vector< std::pair< uint32_t, uint32_t > > final_correspondences;
     final_correspondences.clear();
-    
+
     // get the correspondences
     for( map_it_3D = corr_3D_to_2D.begin(); map_it_3D != corr_3D_to_2D.end(); ++map_it_3D )
     {
       c2D.push_back(keypoints[map_it_3D->second.first].x);
       c2D.push_back(keypoints[map_it_3D->second.first].y);
-      
+
       c3D.push_back( points3D[map_it_3D->first][0] );
       c3D.push_back( points3D[map_it_3D->first][1] );
       c3D.push_back( points3D[map_it_3D->first][2] );
-      
+
       final_correspondences.push_back( std::make_pair( map_it_3D->second.first, map_it_3D->first ) );
     }
-    
+
     timer.Stop();
     std::cout << " computed correspondences in " << timer.GetElapsedTimeAsString() << ", considering " << nb_considered_points << " features " << std::endl;
     corr_time = timer.GetElapsedTime();
-    
-    
+
+
     ////
     // do the pose verification using RANSAC
-    
+
     uint32_t nb_corr = c2D.size() / 2;
     RANSAC::computation_type = P6pt;
     RANSAC::stop_after_n_secs = true;
     RANSAC::max_time = ransac_max_time;
     RANSAC::error = 10.0f; // for P6pt this is the SQUARED reprojection error in pixels
     RANSAC ransac_solver;
-    
-    
+
+
     std::cout << " applying RANSAC on " << nb_corr << " correspondences " << std::endl;
     timer.Init();
     timer.Start();
-    ransac_solver.apply_RANSAC( c2D, c3D, nb_corr, std::max( float( minimal_RANSAC_solution ) / float( nb_corr ), min_inlier ) ); 
+    ransac_solver.apply_RANSAC( c2D, c3D, nb_corr, std::max( float( minimal_RANSAC_solution ) / float( nb_corr ), min_inlier ) );
     timer.Stop();
     RANSAC_time = timer.GetElapsedTime();
-    
+
     all_timer.Stop();
-    
+
     // output the solution:
     std::cout << "#### found solution ####" << std::endl;
     std::cout << " needed time: " << all_timer.GetElapsedTimeAsString() << std::endl;
@@ -933,10 +933,10 @@ int main (int argc, char **argv)
     // get the solution from RANSAC
     std::vector< uint32_t > inlier;
     inlier.assign( ransac_solver.get_inliers().begin(), ransac_solver.get_inliers().end()  );
-    
+
     // get the computed projection matrix
     Util::Math::ProjMatrix proj_matrix = ransac_solver.get_projection_matrix();
-    
+
     // decompose the projection matrix
     Util::Math::Matrix3x3 Rot, K;
     proj_matrix.decompose( K, Rot );
@@ -945,11 +945,11 @@ int main (int argc, char **argv)
     std::cout << " camera calibration: " << K << std::endl;
     std::cout << " camera rotation: " << Rot << std::endl;
     std::cout << " camera position: " << proj_matrix.m_center << std::endl;
-        
+
     ofs_details << inlier.size() << " " << nb_corr << " " << vw_time << " " << corr_time << " " << RANSAC_time << " " << all_timer.GetElapsedTime() << std::endl;
-    
+
     std::cout << "#########################" << std::endl;
-    
+
     // determine whether the image was registered or not
     // also update the statistics about timing, ...
     if( inlier.size() >= minimal_RANSAC_solution )
@@ -973,7 +973,7 @@ int main (int argc, char **argv)
       avrg_RANSAC_time_rejected = avrg_RANSAC_time_rejected * N_reject / (N_reject+1.0) + RANSAC_time / (N_reject+1.0);
       N_reject += 1.0;
     }
-    
+
     // clean up
     for( uint32_t j=0; j<nb_loaded_keypoints; ++j )
     {
@@ -985,19 +985,19 @@ int main (int argc, char **argv)
     descriptors.clear();
     keypoints.clear();
     inlier.clear();
-    
+
     // display statistics
     std::cout << std::endl << std::endl << " registered so far: " << registered << " / " << i+1 << std::endl;
     std::cout << " average time needed to compute the correspondences: registered: " << avrg_cor_computation_time_accepted << " rejected: " << avrg_cor_computation_time_rejected << std::endl;
     std::cout << "avrg. registration time: " << avrg_reg_time << " ( " << registered << " , avrg. inlier-ratio: " << mean_inlier_ratio_accepted << ", avrg. nb correspondences : " << mean_nb_correspondences_accepted << " ) avrg. rejection time: " << avrg_reject_time << " ( " << N_reject << ", avrg. inlier-ratio : " << mean_inlier_ratio_rejected << " avrg. nb correspondences : " << mean_nb_correspondences_rejected << " ) " << std::endl << std::endl;
-  
+
   }
-  
+
   ofs_details.close();
-  
+
   ////
   // final statistics
-  
+
   std::cout << std::endl << "#############################" << std::endl;
   std::cout << " total number registered: " << registered << " / " << nb_keyfiles << std::endl;
   std::cout << " average time for computing the vw assignments                                : " << avrg_vw_time << " s for " << avrg_nb_features << " features (on average)" << std::endl;
@@ -1020,10 +1020,9 @@ int main (int argc, char **argv)
     std::cout << "unsigned char descriptors " << std::endl;
   else
     std::cout << "float descriptors " << std::endl;
-  
+
   std::cout << "#############################" << std::endl;
-  
- 
+
+
   return 0;
 }
-

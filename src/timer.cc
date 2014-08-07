@@ -4,7 +4,7 @@
  *      Copyright (C) 2011 by Computer Graphics Group, RWTH Aachen           *
  *                           www.rwth-graphics.de                            *
  *                                                                           *
- *---------------------------------------------------------------------------* 
+ *---------------------------------------------------------------------------*
  *  This file is part of ACG Localizer                                       *
  *                                                                           *
  *  ACG Localizer is free software: you can redistribute it and/or modify    *
@@ -20,7 +20,7 @@
  *  You should have received a copy of the GNU General Public License        *
  *  along with ACG Localizer.  If not, see <http://www.gnu.org/licenses/>.   *
  *                                                                           *
-\*===========================================================================*/ 
+\*===========================================================================*/
 
 #include "timer.hh"
 
@@ -63,7 +63,7 @@ void Timer::Restart()
 void Timer::Stop()
 {
   gettimeofday( & time_end, 0 );
-  
+
   // compute the elapsed time in seconds, i.e. we have to convert from microseconds to seconds
   elapsed_time += ( (double) time_end.tv_sec - (double) time_start.tv_sec + ( (double) time_end.tv_usec - (double) time_start.tv_usec)/1e6 );
 }
@@ -87,5 +87,3 @@ std::string Timer::GetElapsedTimeAsString()
   s << elapsed_minutes << " minutes " << elapsed_seconds << " seconds ";
   return s.str();
 }
-
-
