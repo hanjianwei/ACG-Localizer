@@ -26,8 +26,8 @@ RUN rm -rf ann* flann*
 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-WORKDIR /src/ACG-localizer
+WORKDIR /src/github.com/hanjianwei/ACG-Localizer
 
-ENV PATH /src/ACG-localizer/build/bin:$PATH
+ENV PATH /src/github.com/hanjianwei/ACG-Localizer/build/bin:$PATH
 
 CMD ["bash"]
